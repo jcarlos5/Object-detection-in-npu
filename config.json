@@ -5,6 +5,6 @@
     "CLASSES": ["PERSON"],
     "MODEL_PATH": "./models/model.rknn",
     "CAM_DEV": 0,
-    "CAM_WITH": 1280,
-    "CAM_HEIGHT": 720
+    "CAM_WITH": 720,
+    "CAM_HEIGHT": 480
 }

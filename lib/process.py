@@ -1,4 +1,5 @@
 from lib.common import SETTINGS
+import numpy as np
 import torch
 
 def box_convert(bboxes: torch.Tensor) -> torch.Tensor:
@@ -11,10 +12,16 @@ def box_convert(bboxes: torch.Tensor) -> torch.Tensor:
     Returns:
         list: Bounding boxes with the new format
     """
-    return torch.tensor([
-        [box[0] - box[2] / 2, box[1] - box[3] / 2, box[0] + box[2] / 2, box[1] + box[3] / 2]
-        for box in bboxes
-    ])
+    new_boxes = []
+    for box in bboxes:
+        new_boxes.append([
+            box[0] - box[3] / 2,
+            box[1] - box[3] / 2,
+            box[0] + box[3] / 2,
+            box[1] + box[3] / 2
+        ])
+
+    return new_boxes
 
 
 def iou(boxes_1: torch.Tensor, boxes_2: torch.Tensor) -> torch.Tensor:
@@ -29,13 +36,13 @@ def iou(boxes_1: torch.Tensor, boxes_2: torch.Tensor) -> torch.Tensor:
         tensor: Intersection over union for all examples
     """
 
-    box1_x1 = boxes_1[..., 0:1] - boxes_1[..., 2:3] / 2
+    box1_x1 = boxes_1[..., 0:1] - boxes_1[..., 3:4] / 2
     box1_y1 = boxes_1[..., 1:2] - boxes_1[..., 3:4] / 2
-    box1_x2 = boxes_1[..., 0:1] + boxes_1[..., 2:3] / 2
+    box1_x2 = boxes_1[..., 0:1] + boxes_1[..., 3:4] / 2
     box1_y2 = boxes_1[..., 1:2] + boxes_1[..., 3:4] / 2
-    box2_x1 = boxes_2[..., 0:1] - boxes_2[..., 2:3] / 2
+    box2_x1 = boxes_2[..., 0:1] - boxes_2[..., 3:4] / 2
     box2_y1 = boxes_2[..., 1:2] - boxes_2[..., 3:4] / 2
-    box2_x2 = boxes_2[..., 0:1] + boxes_2[..., 2:3] / 2
+    box2_x2 = boxes_2[..., 0:1] + boxes_2[..., 3:4] / 2
     box2_y2 = boxes_2[..., 1:2] + boxes_2[..., 3:4] / 2
 
     x1 = torch.max(box1_x1, box2_x1)
@@ -54,7 +61,8 @@ def iou(boxes_1: torch.Tensor, boxes_2: torch.Tensor) -> torch.Tensor:
 def nms(
         bboxes: torch.Tensor,
         iou_threshold:float = SETTINGS.IOU_TRESHOLD,
-        threshold:float = SETTINGS.CONFIDENCE_TRESHOLD
+        threshold:float = SETTINGS.CONFIDENCE_TRESHOLD,
+        classes:list = None
     ) -> torch.Tensor:
     """
     Does Non Max Suppression given bboxes
@@ -74,12 +82,18 @@ def nms(
 
     while bboxes:
         chosen_box = bboxes.pop(0)
+        #chosen_box[2] = chosen_box[2]*10000
         bboxes = [
             box
             for box in bboxes
             if box[0] != chosen_box[0]
+            #and box[2] > 100 and box[3] > 100
             and iou(torch.tensor(chosen_box[:4]),torch.tensor(box[:4])) < iou_threshold
         ]
+
+        if classes:
+            if int(chosen_box[5]) not in classes: continue
+
         bboxes_after_nms.append(chosen_box)
 
-    return torch.tensor(bboxes_after_nms)
+    return np.array(bboxes_after_nms)

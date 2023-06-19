@@ -1,70 +1,70 @@
-# from rknnlite.api import RKNNLite
-from lib.common import SETTINGS, open_cam_usb, letterbox
+from lib.common import SETTINGS, open_cam, letterbox, draw
+from lib.process import nms, box_convert
+from rknnlite.api import RKNNLite
 from imutils.video import FPS
-from lib.process import nms
-import argparse
+import numpy as np
 import time
 import cv2
-
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--inputtype", required=False, default="cam2",
-	help="Select input cam, cam2, file")
-ap.add_argument("-f", "--filename", required=False, default="skyfall.mp4",
-	help="file video (.mp4)")
-args = vars(ap.parse_args())
-
-
-def draw(image, bboxes, scores, classes):
-    """Draw the boxes on the image.
-
-    Arguments:
-        image: original image.
-        bboxes (tensor) : Bounding boxes
-        scores (tensor) : Scores of each class
-        classes (list)  : Labels of bboxes
-    """
-
-    for box, score, label  in zip(bboxes, scores, classes):
-        top, left, right, bottom = box
-        label = SETTINGS.CLASSES[int(label)]
-
-        cv2.rectangle(image, (top, left), (right, bottom), (255, 0, 0), 2)
-        cv2.putText(image, '{0} {1:.2f}'.format(label, score), (top, left - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
         
 
 if __name__ == '__main__':
-    # rknn_lite = RKNNLite()
-    # ret = rknn_lite.load_rknn(SETTINGS.MODEL_PATH)
+    rknn_lite = RKNNLite()
+    ret = rknn_lite.load_rknn(SETTINGS.MODEL_PATH)
+    if ret != 0: exit(ret)
+    ret = rknn_lite.init_runtime(core_mask=RKNNLite.NPU_CORE_0)
 
-    # if ret != 0: exit(ret)
-    
-    # ret = rknn_lite.init_runtime(core_mask=RKNNLite.NPU_CORE_0)
-
-    vs = open_cam_usb()
-    time.sleep(2.0)
+    vs = open_cam()
     fps = FPS().start()
 
     if not vs.isOpened():
         print("Cannot capture from camera. Exiting.")
         quit()
     
-    prev_frame_time = 0
-    new_frame_time = 0
+    prev_ft = 0
+    new_ft = 0
 
     while True:
         ret, frame = vs.read()
         if not ret: break
 
-        new_frame_time = time.time()
-        show_fps = 1/(new_frame_time-prev_frame_time)
-        prev_frame_time = new_frame_time
-        show_fps = int(show_fps)
-        show_fps = str("{} FPS".format(show_fps))
+        new_ft = time.time()
+        show_fps = f"{int(1/(new_ft-prev_ft))} FPS"
+        prev_ft = new_ft
+        frame, ratio, (dw, dh) = letterbox(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-        ori_frame = frame
+        outputs = rknn_lite.inference(inputs=[np.expand_dims(frame,axis=0)])[0][0]
+        
+        # post process
+        filter_output = nms(outputs, 0.5, 0.7)
 
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame, ratio, (dw, dh) = letterbox(frame)
+        if filter_output.shape[0] != 0:
+            bboxes = box_convert(filter_output[:, 0:4])
+            scores = filter_output[:, 4].tolist()
+            classes = filter_output[:, 5].tolist()
+            draw(frame, bboxes, scores, classes)
 
+        frame = cv2.resize(
+            cv2.cvtColor(frame, cv2.COLOR_RGB2BGR),
+            (SETTINGS.CAM_WITH, SETTINGS.CAM_HEIGHT),
+            interpolation=cv2.INTER_LINEAR
+        )
+        cv2.putText(frame, show_fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+        cv2.imshow("OBJETOS DETECTADOS", frame)
+
+        key = cv2.waitKey(1) & 0xFF
+        
+        if key == ord("q"): break
+        fps.update()
+    
+    #rknn_lite.release()
+    rknn_lite.release()
+
+    # stop the timer and display FPS information
+    fps.stop()
+    print("[INFO] elapsed time: {:.2f}".format(fps.elapsed()))
+    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+    
+    # do a bit of cleanup
+    cv2.destroyAllWindows()
+    vs.release()
         

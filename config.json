@@ -4,6 +4,7 @@
     "IMAGE_SIZE": [640,640],
     "CLASSES": ["PERSON"],
     "MODEL_PATH": "./models/model.rknn",
+    "MODEL_ONNX_PATH": "./models/model.onnx",
     "CAM_DEV": 0,
     "CAM_WITH": 720,
     "CAM_HEIGHT": 480

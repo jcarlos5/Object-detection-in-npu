@@ -11,7 +11,8 @@ if __name__ == '__main__':
     SETTINGS.load("config.json")
 
     rknn_lite = RKNNLite()
-    ret = rknn_lite.load_rknn(SETTINGS.MODEL_PATH)
+    #ret = rknn_lite.load_rknn(SETTINGS.MODEL_PATH)
+    ret = rknn_lite.load_onnx(SETTINGS.MODEL_ONNX_PATH)
     if ret != 0: exit(ret)
     ret = rknn_lite.init_runtime(core_mask=RKNNLite.NPU_CORE_0)
 

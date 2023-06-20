@@ -82,12 +82,12 @@ def nms(
 
     while bboxes:
         chosen_box = bboxes.pop(0)
-        bboxes = [
-            box
-            for box in bboxes
-            if box[0] != chosen_box[0]
-            and iou(torch.tensor(chosen_box[:4]),torch.tensor(box[:4])) < iou_threshold
-        ]
+        bboxes = []
+        for box in bboxes:
+            iou_value = iou(torch.tensor(chosen_box[:4]),torch.tensor(box[:4]))
+            print(f"Box1: {chosen_box[:4]} - Box2: {box[:4]} - SALIDA: {iou_value}")
+            if box[0] != chosen_box[0] and iou_value < iou_threshold:
+                bboxes.append(box)
 
         if classes:
             if int(chosen_box[5]) not in classes: continue

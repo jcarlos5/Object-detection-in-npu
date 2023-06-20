@@ -2,7 +2,7 @@ from lib.common import SETTINGS
 import numpy as np
 import torch
 
-def box_convert(bboxes: torch.Tensor) -> torch.Tensor:
+def box_convert(bboxes: list) -> list:
     """
     Format bounding boxes from [x,y,w,h] to [x1,y1,x2,y2]
 
@@ -82,12 +82,10 @@ def nms(
 
     while bboxes:
         chosen_box = bboxes.pop(0)
-        #chosen_box[2] = chosen_box[2]*10000
         bboxes = [
             box
             for box in bboxes
             if box[0] != chosen_box[0]
-            #and box[2] > 100 and box[3] > 100
             and iou(torch.tensor(chosen_box[:4]),torch.tensor(box[:4])) < iou_threshold
         ]
 

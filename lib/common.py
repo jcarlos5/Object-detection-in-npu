@@ -50,6 +50,9 @@ def draw(image, bboxes, scores, classes):
 
     for box, score, label  in zip(bboxes, scores, classes):
         top, left, right, bottom = [int(n) for n in box]
+        print(label)
+        if isinstance(label, list):
+            label = label[0]
         label = int(label)
         label = SETTINGS.CLASSES[label-1] if label <= len(SETTINGS.CLASSES) else f"CLASE: {label}"
 

@@ -11,8 +11,7 @@ if __name__ == '__main__':
     SETTINGS.load("config.json")
 
     rknn_lite = RKNNLite()
-    #ret = rknn_lite.load_rknn(SETTINGS.MODEL_PATH)
-    ret = rknn_lite.load_onnx(SETTINGS.MODEL_ONNX_PATH)
+    ret = rknn_lite.load_rknn(SETTINGS.MODEL_PATH)
     if ret != 0: exit(ret)
     ret = rknn_lite.init_runtime(core_mask=RKNNLite.NPU_CORE_0)
 
@@ -36,11 +35,12 @@ if __name__ == '__main__':
         
         fh, fw = frame.shape[:2]
         frame = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), tuple(SETTINGS.IMAGE_SIZE))
-        outputs = rknn_lite.inference(inputs=[np.expand_dims(frame,axis=0)], data_format='nhwc')[0][0]
+        outputs = rknn_lite.inference(inputs=[np.expand_dims(frame,axis=0)], data_format='nhwc')
+        print(f"SHAPE OF OUTPUT: {np.array(outputs).shape}")
+        outputs = outputs[0][0]
         outputs = outputs.reshape(outputs.shape[:2])
         
         filter_output = nms(outputs, 0.8, 0.5)
-        print(filter_output)
         if filter_output.shape[0] != 0:
             bboxes = box_convert(filter_output[:, 0:4])
             scores = filter_output[:, 4].tolist()

@@ -57,6 +57,8 @@ def iou(boxes_1: torch.Tensor, boxes_2: torch.Tensor) -> torch.Tensor:
 
     return intersection / (box1_area + box2_area - intersection)
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
 def nms(
         bboxes: torch.Tensor,
@@ -76,12 +78,13 @@ def nms(
         tensor: bboxes after performing NMS given a specific IoU threshold
     """
 
-    bboxes = [box for box in bboxes if (1 / (1 + np.exp(-box[4]))) > threshold]
+    bboxes = [box for box in bboxes if sigmoid(box[4]) > threshold]
     bboxes = sorted(bboxes, key=lambda x: x[4], reverse=True)
     bboxes_after_nms = []
 
     while bboxes:
         chosen_box = bboxes.pop(0)
+        chosen_box = sigmoid(chosen_box)
         bboxes = []
         for box in bboxes:
             iou_value = iou(torch.tensor(chosen_box[:4]),torch.tensor(box[:4]))

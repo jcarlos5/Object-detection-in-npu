@@ -76,7 +76,7 @@ def nms(
         tensor: bboxes after performing NMS given a specific IoU threshold
     """
 
-    bboxes = [box for box in bboxes if box[4] > threshold]
+    bboxes = [box for box in bboxes if (1 / (1 + np.exp(-box[4]))) > threshold]
     bboxes = sorted(bboxes, key=lambda x: x[4], reverse=True)
     bboxes_after_nms = []
 

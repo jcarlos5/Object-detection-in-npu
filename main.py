@@ -35,11 +35,10 @@ if __name__ == '__main__':
         
         fh, fw = frame.shape[:2]
         frame = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), tuple(SETTINGS.IMAGE_SIZE))
-        outputs = rknn_lite.inference(inputs=[np.expand_dims(frame,axis=0)], data_format='nhwc')
-        print(outputs)
-        outputs = outputs[0][0]
+        outputs = rknn_lite.inference(inputs=[np.expand_dims(frame,axis=0)], data_format='nhwc')[0][0]
+        outputs = outputs.reshape(outputs.shape[:2])
         
-        filter_output = nms(outputs, 0.5, 0.7)
+        filter_output = nms(outputs, 0.8, 0.5)
         if filter_output.shape[0] != 0:
             bboxes = box_convert(filter_output[:, 0:4])
             scores = filter_output[:, 4].tolist()

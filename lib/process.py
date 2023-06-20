@@ -85,7 +85,7 @@ def nms(
         bboxes = []
         for box in bboxes:
             iou_value = iou(torch.tensor(chosen_box[:4]),torch.tensor(box[:4]))
-            print(f"Box1: {chosen_box[:4]} - Box2: {box[:4]} - SALIDA: {iou_value}")
+            #print(f"Box1: {chosen_box[:4]} - Box2: {box[:4]} - SALIDA: {iou_value}")
             if box[0] != chosen_box[0] and iou_value < iou_threshold:
                 bboxes.append(box)
 

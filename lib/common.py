@@ -50,11 +50,11 @@ def draw(image, bboxes, scores, classes):
 
     for box, score, label  in zip(bboxes, scores, classes):
         top, left, right, bottom = [int(n) for n in box]
-        print(label)
+        #print(label)
         if isinstance(label, list):
             label = label[0]
         label = int(label)
-        label = SETTINGS.CLASSES[label-1] if label <= len(SETTINGS.CLASSES) else f"CLASE: {label}"
+        label = SETTINGS.CLASSES[label] if label < len(SETTINGS.CLASSES) else f"CLASE: {label}"
 
         cv2.rectangle(image, (top, left), (right, bottom), (255, 0, 0), 2)
         cv2.putText(image, '{0} {1:.2f}'.format(label, score), (top, left - 6),

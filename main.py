@@ -39,6 +39,7 @@ if __name__ == '__main__':
         outputs = outputs.reshape(outputs.shape[:2])
         
         filter_output = nms(outputs, 0.8, 0.5)
+        print(filter_output)
         if filter_output.shape[0] != 0:
             bboxes = box_convert(filter_output[:, 0:4])
             scores = filter_output[:, 4].tolist()

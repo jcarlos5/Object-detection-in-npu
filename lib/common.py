@@ -54,8 +54,10 @@ def draw(image, bboxes, scores, classes):
         if isinstance(label, list):
             label = label[0]
         label = int(label)
-        label = SETTINGS.CLASSES[label] if label < len(SETTINGS.CLASSES) else f"CLASE: {label}"
+        label = SETTINGS.CLASSES[label-1] if label <= len(SETTINGS.CLASSES) else f"CLASE: {label}"
 
         cv2.rectangle(image, (top, left), (right, bottom), (255, 0, 0), 2)
+        print(f"{label} of Type: {type(label)}")
+        print(f"{score} of Type: {type(score)}")
         cv2.putText(image, '{0} {1:.2f}'.format(label, score), (top, left - 6),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
